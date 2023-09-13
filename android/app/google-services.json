@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "90385068552",
+    "project_id": "bookmymovie-70dd7",
+    "storage_bucket": "bookmymovie-70dd7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:90385068552:android:3f2e5d7e2aea62d0a357bd",
+        "android_client_info": {
+          "package_name": "com.example.bookmymovie"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "90385068552-1l6rrcqa6k8jdfl8j5211340mn2ll15m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8AHaaDX0kv0ROS9NVqxC82Tb7pW5NXvY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "90385068552-1l6rrcqa6k8jdfl8j5211340mn2ll15m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
