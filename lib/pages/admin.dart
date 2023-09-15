@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:bookmymovie/pages/navbar.dart';
 
 class admin extends StatefulWidget {
   admin({Key? key}) : super(key: key);
@@ -84,6 +85,7 @@ class _admin extends State<admin> {
     var user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
+      drawer: navbar(email: user!.email.toString()),
       appBar: AppBar(title: Text('Admin'), centerTitle: true),
       body: Padding(
         padding: EdgeInsets.all(16),
