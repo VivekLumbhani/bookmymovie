@@ -1,4 +1,5 @@
 import 'package:bookmymovie/pages/admin.dart';
+import 'package:bookmymovie/pages/booked.dart';
 import 'package:bookmymovie/pages/choose.dart';
 import 'package:bookmymovie/pages/home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -64,17 +65,24 @@ class navbar extends StatelessWidget {
               onTap: () {
                 Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => admin()),);              },
             ),
-          ListTile(
-            leading: Icon(Icons.select_all),
-            title: Text('Choose show'),
-            onTap: () {
-              Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => chooseshow()),);},
-
-          ),
+          // ListTile(
+          //   leading: Icon(Icons.select_all),
+          //   title: Text('Choose show'),
+          //   onTap: () {
+          //     Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => chooseshow()),);
+          //     },
+          //
+          // ),
           ListTile(
             leading: Icon(Icons.exit_to_app),
             title: Text('Sign out'),
             onTap: ()async {await FirebaseAuth.instance.signOut();},
+          ),
+          ListTile(
+            leading: Icon(Icons.airplane_ticket_sharp),
+            title: Text('My Tickets'),
+            onTap: () {
+              Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => booked()),);              },
           ),
 
         ],

@@ -1,45 +1,123 @@
+import 'dart:convert';
 import 'package:bookmymovie/pages/booking.dart';
 import 'package:bookmymovie/pages/navbar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class chooseshow extends StatefulWidget {
-  const chooseshow({Key? key}) : super(key: key);
+  final String? movieename;
+
+  const chooseshow({required this.movieename});
 
   @override
   State<chooseshow> createState() => _chooseshowState();
 }
 
 class _chooseshowState extends State<chooseshow> {
-  var user=FirebaseAuth.instance.currentUser;
+  var user = FirebaseAuth.instance.currentUser;
   late TabController controller;
-  final List<String> dateList = [
-    '01 January',
-    '05 February',
-    '10 March',
-    '15 April',
-    '20 May',
-    '25 June',
-    '03 July',
-    '08 August',
-    
-  ];
-  List<IconData> icons = [
-    Icons.home,
-    Icons.explore,
-    Icons.search,
-    Icons.feed,
-    Icons.post_add,
-    Icons.local_activity,
-    Icons.settings,
-    Icons.person
-  ];
+  String? docid;
+  String? date;
+
+  @override
+  void initState() {
+    super.initState();
+    docid = widget.movieename;
+    fetchData();
+  }
+
+  var movieTitle = "";
+  var datesof = "";
+  var expdate = "";
+  void changeAppBarTitle() {
+    String appBarTitle = "Initial Title";
+
+    setState(() {
+      appBarTitle  = "New Title";
+    });
+  }
+  List<String> generateDateList(String startDate, String endDate) {
+    List<String> dateList = [];
+    DateTime start = DateTime.parse(startDate);
+    DateTime end = DateTime.parse(endDate);
+    DateTime currentDate = DateTime.now();
+
+
+      for (var i = currentDate; i.isBefore(end); i = i.add(Duration(days: 1))) {
+        if(currentDate.isBefore(start)){
+         }else{
+            String formattedDate =
+                '${i.day}/${i.month} \n ${_getWeekdayName(i.weekday)}';
+            dateList.add(formattedDate);
+            print("start is $start and current is $currentDate");
+        }
+      }
+    print('datelist that is $dateList');
+    return dateList;
+  }
+
+  String _getWeekdayName(int weekday) {
+    switch (weekday) {
+      case 1:
+        return 'Sun';
+      case 2:
+        return 'Mon';
+      case 3:
+        return 'Tue';
+      case 4:
+        return 'Wed';
+      case 5:
+        return 'Thu';
+      case 6:
+        return 'Fri';
+      case 7:
+        return 'Sat';
+      default:
+        return '';
+    }
+  }
+
+  List<Map<String, dynamic>> theatersList = [];
+
+  Future<void> fetchData() async {
+    try {
+      DocumentSnapshot snapshot =
+      await FirebaseFirestore.instance.collection('buscollections').doc(docid).get();
+
+      if (snapshot.exists) {
+        final data = snapshot.data() as Map<String, dynamic>?;
+        if (data != null) {
+          movieTitle = data['movieName'] ?? '';
+          datesof = data['date'] ?? '';
+          expdate = data['expiryDate'] ?? '';
+          dateList = generateDateList(datesof, expdate);
+
+
+          final theatersData = jsonDecode(data['theaters']);
+          if (theatersData is List) {
+            theatersList = theatersData.cast<Map<String, dynamic>>();
+          }
+
+          print('$movieTitle and ${widget.movieename.toString()} and $datesof and $expdate)');
+          setState(() {});
+        }
+      } else {
+        print('Document does not exist');
+      }
+    } catch (error) {
+      print('Error: $error');
+    }
+  }
+
+  List<String> dateList = [];
+
   int current = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: navbar(email: user!.email.toString(),),
+      drawer: navbar(email: user!.email.toString()),
       appBar: AppBar(
         title: Text('Choose Date'),
       ),
@@ -63,17 +141,16 @@ class _chooseshowState extends State<chooseshow> {
                         GestureDetector(
                           onTap: () {
                             Visibility(
-                              visible:current==index,
-
+                              visible: current == index,
                               child: Container(
                                 width: 5,
                                 height: 5,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.deepPurple
+                                  color: Colors.deepPurple,
                                 ),
-
-                            ),);
+                              ),
+                            );
                             setState(() {
                               current = index;
                             });
@@ -96,7 +173,15 @@ class _chooseshowState extends State<chooseshow> {
                             ),
                             duration: Duration(milliseconds: 300),
                             child: Center(
-                              child: Text(dateList[index],style: TextStyle(fontWeight: FontWeight.w500,color: current==index?Colors.deepPurple:Colors.black),),
+                              child: Text(
+                                dateList[index],
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color: current == index
+                                      ? Colors.deepPurple
+                                      : Colors.black,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -104,90 +189,107 @@ class _chooseshowState extends State<chooseshow> {
                     );
                   },
                 ),
-
               ),
-              Container(
-                child:
-                Column(
-                  children: [
-                    Center(
-                      child:
-                      Card(
-                        margin: const EdgeInsets.all(16.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const ListTile(
-                              leading: Icon(Icons.alarm),
-                              title: Text('Theater Name ',style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+              Column(
+                children: theatersList.map((theater) {
+                  final cinemaName = theater['cinemaName'];
+                  final dynamicTime = theater['dynamicTime'];
+
+                  List<Widget> timeSlots = [];
+
+                  if (dynamicTime != null) {
+                    int hour = dynamicTime['hour'];
+                    int minute = dynamicTime['minute'];
+
+                    String time = '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+
+                    timeSlots.add(
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => bookings(movieename:docid, date: dateList[current],timeof: time, oriname:movieTitle)),
+                          );
+                        },
+                        child: Container(
+                          width: 80,
+                          height: 50.0,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.black,
+                              width: 1.0,
                             ),
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                final numberOfSlots = 14;
-                                final slotsPerRow = 5;
-                                final slotWidth = constraints.maxWidth / slotsPerRow;
-
-                                final timeSlots = List.generate(numberOfSlots, (index) {
-                                  final time = '${index + 1}:00';
-                                  return GestureDetector(
-                                    onTap: (){
-                                      Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => bookings()),);
-                                    },
-                                    child: Container(
-                                      width: slotWidth,
-                                      height: 50.0,
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Colors.black,
-                                          width: 1.0,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8.0),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          time,
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-
-                                    ),
-                                  );
-                                });
-
-                                return Wrap(
-                                  children: timeSlots,
-                                  spacing: 8.0, // Adjust the spacing as needed
-                                  runSpacing: 8.0, // Adjust the runSpacing as needed
-                                );
-                              },
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          child: Center(
+                            child: Text(
+                              time,
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ],
+                          ),
                         ),
                       ),
+                    );
+                  }
+
+                  return Card(
+                    margin: EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          title: Text(
+                            '$cinemaName',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Wrap(
+                            children: timeSlots,
+                            spacing: 8.0,
+                            runSpacing: 8.0,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(),
-                    Container(margin: EdgeInsets.only(top: 30),
-                      width: double.infinity,
-                      height: 500,
-                      color: Colors.deepPurple,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [Icon(icons[current],size: 200,color: Colors.black,),SizedBox(height: 10,),Text(dateList[current],style: TextStyle(fontWeight: FontWeight.w500,fontSize: 30,color: Colors.black),)],
+                  );
+                }).toList(),
+              ),
+              SizedBox(
+
+
+                width: double.infinity,
+                height: 500,
+
+
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      dateList[current],
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 30,
+                        color: Colors.black,
                       ),
-                    )
+                    ),
                   ],
-
                 ),
-
               ),
             ],
           ),
         ),
       ),
-
     );
   }
 }

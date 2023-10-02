@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:bookmymovie/pages/serv.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -145,6 +148,9 @@ class _admin extends State<admin> {
                           final path = pickedImage.path;
                           final fileName = pickedImage.name;
                           imgpath=fileName;
+                          final serve = serv();
+                          await serve.uploadfile(path, fileName);
+
                           print('Path is $path and filename is $fileName');
                         }
                       },
@@ -233,7 +239,20 @@ class _admin extends State<admin> {
                       int seats = int.tryParse(seatscontrol.text) ?? 0;
                       String dateValue = dateController.text;
                       String expiryDateValue = expiryDateController.text;
-                      String theatersData = theaters.toString();
+
+                      List<Map<String, dynamic>> theatersData = [];
+                      theaters.forEach((theater) {
+                        theatersData.add({
+                          'cinemaName': theater['cinemaName'],
+                          'dynamicTime': {
+                            'hour': theater['dynamicTime'] != null ? theater['dynamicTime'].hour : 0,
+                            'minute': theater['dynamicTime'] != null ? theater['dynamicTime'].minute : 0,
+                          },
+                        });
+                      });
+
+
+                      String theatersDataJson = jsonEncode(theatersData);
 
                       try {
                         await FirebaseFirestore.instance.collection('buscollections').add({
@@ -242,8 +261,8 @@ class _admin extends State<admin> {
                           'expiryDate': expiryDateValue,
                           'price': moviePriceValue,
                           'seats': seats,
-                          'imgname':imgpath,
-                          'theaters': theatersData,
+                          'imgname': imgpath,
+                          'theaters': theatersDataJson,
                         });
 
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -263,6 +282,7 @@ class _admin extends State<admin> {
                   },
                   child: Text('Submit'),
                 ),
+
               ],
             ),
           ),
