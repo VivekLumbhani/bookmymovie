@@ -1,4 +1,3 @@
-import 'package:bookmymovie/pages/loginpage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -8,7 +7,6 @@ class SignUp extends StatefulWidget {
   @override
   State<SignUp> createState() => _SignUpState();
 }
-
 class _SignUpState extends State<SignUp> {
   final _formKey=GlobalKey<FormState>();
   final TextEditingController _email=TextEditingController();
@@ -39,7 +37,6 @@ class _SignUpState extends State<SignUp> {
             SnackBar(content: Text('Email already exist'),
             )
         );
-
       }
     } catch (e) {
       print(e);
@@ -108,7 +105,6 @@ class _SignUpState extends State<SignUp> {
                         , child: Text('Login')),
                   ],
                 ),
-
               ],
             ),
           ),

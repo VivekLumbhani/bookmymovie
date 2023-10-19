@@ -1,18 +1,75 @@
 import 'package:bookmymovie/pages/admin.dart';
 import 'package:bookmymovie/pages/booked.dart';
-import 'package:bookmymovie/pages/choose.dart';
 import 'package:bookmymovie/pages/home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class navbar extends StatelessWidget {
   final String email;
 
   const navbar({required this.email});
 
+  Future<void> showFeedbackDialog(BuildContext context) async {
+    double rating = 0;
+    String feedback = '';
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Feedback'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              RatingBar.builder(
+                initialRating: rating,
+                minRating: 1,
+                direction: Axis.horizontal,
+                allowHalfRating: false,
+                itemCount: 5,
+                itemSize: 40,
+                itemBuilder: (context, _) => Icon(
+                  Icons.star,
+                  color: Colors.amber,
+                ),
+                onRatingUpdate: (newRating) {
+                  rating = newRating;
+                },
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Description (optional)',
+                ),
+                onChanged: (value) {
+                  feedback = value;
+                },
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            ElevatedButton(
+              child: Text('Submit'),
+              onPressed: () {
+                // return AlertDialog()
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
   @override
   Widget build(BuildContext context) {
-    bool isAdmin = email == 'vivek@gmail.com';
+    bool isAdmin = email == 'vivek@gmail.com' || email== 'kruti@gmail.com';
 
     return Drawer(
       child: ListView(
@@ -43,7 +100,7 @@ class navbar extends StatelessWidget {
               ],
             ),
             decoration: BoxDecoration(
-              color: Colors.pink,
+              color: Colors.pink
               // image: DecorationImage(image: Image.network("images/nav.jpg"),fit: BoxFit.cover )
             ),
           ),
@@ -65,24 +122,23 @@ class navbar extends StatelessWidget {
               onTap: () {
                 Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => admin()),);              },
             ),
-          // ListTile(
-          //   leading: Icon(Icons.select_all),
-          //   title: Text('Choose show'),
-          //   onTap: () {
-          //     Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => chooseshow()),);
-          //     },
-          //
-          // ),
-          ListTile(
-            leading: Icon(Icons.exit_to_app),
-            title: Text('Sign out'),
-            onTap: ()async {await FirebaseAuth.instance.signOut();},
-          ),
           ListTile(
             leading: Icon(Icons.airplane_ticket_sharp),
             title: Text('My Tickets'),
             onTap: () {
               Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => booked()),);              },
+          ),
+          ListTile(
+            leading: Icon(Icons.feedback),
+            title: Text('Feedback'),
+            onTap: () {
+              showFeedbackDialog(context);
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.exit_to_app),
+            title: Text('Sign out'),
+            onTap: ()async {await FirebaseAuth.instance.signOut();},
           ),
 
         ],

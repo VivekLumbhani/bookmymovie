@@ -30,6 +30,8 @@ class _chooseshowState extends State<chooseshow> {
   var movieTitle = "";
   var datesof = "";
   var expdate = "";
+  var priceofseat="";
+
   void changeAppBarTitle() {
     String appBarTitle = "Initial Title";
 
@@ -92,7 +94,7 @@ class _chooseshowState extends State<chooseshow> {
           datesof = data['date'] ?? '';
           expdate = data['expiryDate'] ?? '';
           dateList = generateDateList(datesof, expdate);
-
+          priceofseat = data['price'] ?? '';
 
           final theatersData = jsonDecode(data['theaters']);
           if (theatersData is List) {
@@ -179,7 +181,7 @@ class _chooseshowState extends State<chooseshow> {
                                   fontWeight: FontWeight.w500,
                                   color: current == index
                                       ? Colors.deepPurple
-                                      : Colors.black,
+                                      : Colors.green,
                                 ),
                               ),
                             ),
@@ -208,7 +210,7 @@ class _chooseshowState extends State<chooseshow> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => bookings(movieename:docid, date: dateList[current],timeof: time, oriname:movieTitle)),
+                            MaterialPageRoute(builder: (context) => bookings(movieename:docid, date: dateList[current],timeof: time, oriname:movieTitle,priceofseat:priceofseat,cinemaname:cinemaName)),
                           );
                         },
                         child: Container(
@@ -261,30 +263,6 @@ class _chooseshowState extends State<chooseshow> {
                     ),
                   );
                 }).toList(),
-              ),
-              SizedBox(
-
-
-                width: double.infinity,
-                height: 500,
-
-
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Text(
-                      dateList[current],
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 30,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),

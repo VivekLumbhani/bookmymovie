@@ -36,7 +36,7 @@ class home extends StatelessWidget {
                 SizedBox(height: 20),
                 Row(
                   children: [
-                    Text('Text'),
+                    Text('All Movies',),
                   ],
                 ),
                 StreamBuilder<QuerySnapshot>(
@@ -127,21 +127,7 @@ class home extends StatelessWidget {
                   },
                 ),
                 SizedBox(height: 20),
-                Row(
-                  children: [
-                    Text('Vertical'),
-                  ],
-                ),
-                Container(
-                  height: 500,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        // Your other containers go here
-                      ],
-                    ),
-                  ),
-                ),
+
                 SizedBox(height: 20),
               ],
             ),

@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:bookmymovie/pages/serv.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -16,8 +15,7 @@ class admin extends StatefulWidget {
 }
 
 class _admin extends State<admin> {
-  final DateFormat _dateFormat = DateFormat('yyyy-MM-dd'); // Date format
-
+  final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
   final _formKey = GlobalKey<FormState>();
   final TextEditingController movieName = TextEditingController();
   final TextEditingController movieprice = TextEditingController();
@@ -31,6 +29,7 @@ class _admin extends State<admin> {
 
   List<Map<String, dynamic>> theaters = [];
   var imgpath;
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -98,12 +97,12 @@ class _admin extends State<admin> {
             child: Column(
               children: [
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'Enter Movie Name'),
+                  decoration: InputDecoration(labelText: 'Enter Movie Name*'), // Add an asterisk (*) to indicate required
                   controller: movieName,
                   keyboardType: TextInputType.text,
                   validator: (val) {
                     if (val == null || val.isEmpty) {
-                      return 'Enter Movie Name';
+                      return 'Please enter a movie name';
                     }
                     return null;
                   },
@@ -113,7 +112,7 @@ class _admin extends State<admin> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Selected Date: ',
+                      'Selected Date*: ',
                       style: TextStyle(fontSize: 18),
                     ),
                     Text(
@@ -124,6 +123,10 @@ class _admin extends State<admin> {
                     ElevatedButton(
                       onPressed: () => _selectDate(context),
                       child: Text('Select Date'),
+                      style: ElevatedButton.styleFrom(
+                        primary: Colors.blue, // Change the button color as needed
+                        onPrimary: Colors.white, // Change the text color as needed
+                      ),
                     ),
                   ],
                 ),
@@ -132,7 +135,7 @@ class _admin extends State<admin> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Pick Poster for Movie',
+                      'Pick Poster for Movie*',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     ElevatedButton(
@@ -147,7 +150,7 @@ class _admin extends State<admin> {
                         } else {
                           final path = pickedImage.path;
                           final fileName = pickedImage.name;
-                          imgpath=fileName;
+                          imgpath = fileName;
                           final serve = serv();
                           await serve.uploadfile(path, fileName);
 
@@ -155,15 +158,19 @@ class _admin extends State<admin> {
                         }
                       },
                       child: Text('Pick from Gallery'),
+                      style: ElevatedButton.styleFrom(
+                        primary: Colors.blue, // Change the button color as needed
+                        onPrimary: Colors.white, // Change the text color as needed
+                      ),
                     ),
                   ],
                 ),
-                SizedBox(height: 10,),
+                SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Expiry Date: ',
+                      'Expiry Date*: ',
                       style: TextStyle(fontSize: 18),
                     ),
                     Text(
@@ -174,13 +181,20 @@ class _admin extends State<admin> {
                     ElevatedButton(
                       onPressed: () => _selectExpiry(context),
                       child: Text('When to Expire'),
+                      style: ElevatedButton.styleFrom(
+                        primary: Colors.blue, // Change the button color as needed
+                        onPrimary: Colors.white, // Change the text color as needed
+                      ),
                     ),
                   ],
                 ),
-                SizedBox(height: 10,),
                 ElevatedButton(
                   onPressed: addTheatre,
                   child: Text('Add A Theater'),
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.blue, // Change the button color as needed
+                    onPrimary: Colors.white, // Change the text color as needed
+                  ),
                 ),
                 ListView.builder(
                   shrinkWrap: true,
@@ -188,49 +202,48 @@ class _admin extends State<admin> {
                   itemBuilder: (BuildContext context, int index) {
                     return Column(
                       children: [
-                        SizedBox(height: 10,),
                         TextFormField(
-                          decoration: InputDecoration(labelText: 'Enter Cinema Name'),
+                          decoration: InputDecoration(labelText: 'Enter Cinema Name*'), // Add an asterisk (*) to indicate required
                           onChanged: (value) {
                             theaters[index]['cinemaName'] = value;
                             print("array is $theaters");
                           },
                         ),
-                        SizedBox(height: 5,),
                         ElevatedButton(
                           onPressed: () => _selectDynamicTime(context, index),
                           child: Text('Pick Dynamic Time'),
+                          style: ElevatedButton.styleFrom(
+                            primary: Colors.blue, // Change the button color as needed
+                            onPrimary: Colors.white, // Change the text color as needed
+                          ),
                         ),
-                        Divider(color: Colors.blue,),
+                        Divider(color: Colors.blue),
                       ],
                     );
                   },
                 ),
-                SizedBox(height: 10,),
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'Enter Seats'),
+                  decoration: InputDecoration(labelText: 'Enter Seats*'), // Add an asterisk (*) to indicate required
                   controller: seatscontrol,
                   keyboardType: TextInputType.number,
                   validator: (val) {
                     if (val == null || val.isEmpty) {
-                      return 'Enter Number of Seats';
+                      return 'Please enter the number of seats';
                     }
                     return null;
                   },
                 ),
-                SizedBox(height: 10,),
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'Enter Price'),
+                  decoration: InputDecoration(labelText: 'Enter Price*'), // Add an asterisk (*) to indicate required
                   controller: movieprice,
                   keyboardType: TextInputType.number,
                   validator: (val) {
                     if (val == null || val.isEmpty) {
-                      return 'Enter Movie Price';
+                      return 'Please enter the movie price';
                     }
                     return null;
                   },
                 ),
-                SizedBox(height: 10,),
                 ElevatedButton(
                   onPressed: () async {
                     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
@@ -250,7 +263,6 @@ class _admin extends State<admin> {
                           },
                         });
                       });
-
 
                       String theatersDataJson = jsonEncode(theatersData);
 
@@ -281,8 +293,11 @@ class _admin extends State<admin> {
                     }
                   },
                   child: Text('Submit'),
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.blue, // Change the button color as needed
+                    onPrimary: Colors.white, // Change the text color as needed
+                  ),
                 ),
-
               ],
             ),
           ),

@@ -1,15 +1,17 @@
 import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class bookings extends StatefulWidget {
   final String? movieename;
+  final String? priceofseat;
   final String? date;
   final String? timeof;
   final String? oriname;
-  const bookings({required this.movieename, required this.date, this.timeof, this.oriname});
+  final String? cinemaname;
+
+  const bookings({required this.movieename, required this.date, this.timeof, this.oriname,this.priceofseat,this.cinemaname});
 
   @override
   State<bookings> createState() => _bookings();
@@ -21,10 +23,13 @@ class _bookings extends State<bookings> {
   String? date;
   String? timeof;
   String? oriname;
+  String? cinemaname;
+  String? priceofseat;
+  double totalCharge = 0.0;
+
   List<bool> selectedSeats = List.generate(100, (index) => false);
   List<int> selectedSeatIndices = [];
-  List<int> reservedSeats = []; // List to store reserved seat indices
-
+  List<int> reservedSeats = [];
   var username = FirebaseAuth.instance.currentUser;
 
   @override
@@ -33,23 +38,22 @@ class _bookings extends State<bookings> {
     date = widget.date;
     timeof = widget.timeof;
     oriname=widget.oriname;
-    final username = FirebaseAuth.instance.currentUser;
+    priceofseat=widget.priceofseat;
+    cinemaname=widget.cinemaname;
+
     final docid = widget.movieename;
     final idtochek = docid! + timeof!+date!;
 
 
 
-    print("docid is $docid and date is $date $username $timeof $idtochek ");
+    print("docid is $docid and date is $date $timeof $idtochek $priceofseat");
 
-    // Check if the document with movieId equal to idtochek exists
     FirebaseFirestore.instance
         .collection('bookings')
         .where('movieId', isEqualTo: idtochek)
         .get()
         .then((QuerySnapshot querySnapshot) {
       if (querySnapshot.docs.isNotEmpty) {
-        // Document with movieId equal to idtochek exists
-        // Parse the array and update reservedSeats list
         List<int> reserved = [];
         for (var doc in querySnapshot.docs) {
           String seats = doc['selectedSeats'];
@@ -69,15 +73,16 @@ class _bookings extends State<bookings> {
 
   void toggleSeatSelection(int index) {
     setState(() {
-      // Check if the seat is reserved
       if (reservedSeats.contains(index)) {
-        return; // Don't allow selection for reserved seats
+        return;
       }
 
       selectedSeats[index] = !selectedSeats[index];
       if (selectedSeats[index]) {
+        totalCharge += double.parse(priceofseat!);
         selectedSeatIndices.add(index);
       } else {
+        totalCharge -= double.parse(priceofseat!);
         selectedSeatIndices.remove(index);
       }
     });
@@ -113,7 +118,6 @@ class _bookings extends State<bookings> {
                 transformAlignment: Alignment.center,
                 child: Column(
                   children: [
-
                     ElevatedButton(
                       onPressed: selectedSeatIndices.isEmpty
                           ? null
@@ -122,37 +126,52 @@ class _bookings extends State<bookings> {
                         final docid = widget.movieename;
                         final date = widget.date;
 
-                        final id = docid! + timeof!+date!;
-                        final selectedSeatsString =
-                            '[' + selectedSeatIndices.map((index) => index.toString()).join(',') + ']';
+                        final id = docid! + timeof! + date!;
+                        print('id to be inserted is ${id.trim()}');
 
-                        // Check if a booking with the same ID already exists
+                        final selectedSeatsString = jsonEncode(selectedSeatIndices);
+
                         final bookingSnapshot = await FirebaseFirestore.instance
                             .collection('bookings')
                             .where('movieId', isEqualTo: id)
                             .get();
 
                         if (bookingSnapshot.docs.isNotEmpty) {
-                          // Booking with the same ID exists, append new seats to the existing array
                           final existingBookingDoc = bookingSnapshot.docs.first;
                           final existingBookingId = existingBookingDoc.id;
                           final existingSeats = existingBookingDoc['selectedSeats'] as String;
-                          final updatedSeatsString = existingSeats.replaceFirst(']', ',') + selectedSeatsString.substring(1);
+                          final List<dynamic> updatedSeatsList = jsonDecode(existingSeats);
+                          updatedSeatsList.addAll(selectedSeatIndices);
 
-                          // Update the existing booking document with the new seats data
-                          await FirebaseFirestore.instance.collection('bookings').doc(existingBookingId).update({'selectedSeats': updatedSeatsString});
+                          await FirebaseFirestore.instance.collection('bookings').doc(existingBookingId).update({'selectedSeats': jsonEncode(updatedSeatsList)});
+                          final personalBookingSnapshot = await FirebaseFirestore.instance
+                              .collection('personalbooking')
+                              .where('movieId', isEqualTo: id)
+                              .where('username', isEqualTo: username!.email.toString())
+                              .get();
 
-                          final personalbook = {
-                            'username': username!.email.toString(),
-                            'movieId': id,
-                            'date': date,
-                            'movieName':oriname,
-                            'timeof': timeof,
-                            'selectedSeats': selectedSeatsString,
-                          };
-                          await FirebaseFirestore.instance.collection('personalbooking').add(personalbook);
+                          if (personalBookingSnapshot.docs.isNotEmpty) {
+                            final existingPersonalBookingDoc = personalBookingSnapshot.docs.first;
+                            final existingPersonalBookingId = existingPersonalBookingDoc.id;
+                            final existingSeats = existingPersonalBookingDoc['selectedSeats'] as String;
+                            final List<dynamic> updatedSeatsList = jsonDecode(existingSeats);
+                            updatedSeatsList.addAll(selectedSeatIndices);
 
-                          // Notify the user that the booking was updated
+                            await FirebaseFirestore.instance.collection('personalbooking').doc(existingPersonalBookingId).update({'selectedSeats': jsonEncode(updatedSeatsList)});
+                          } else {
+                            final personalBookingData = {
+                              'username': username!.email.toString(),
+                              'movieId': id,
+                              'date': date,
+                              'movieName': oriname,
+                              'timeof': timeof,
+                              'cinemaName': cinemaname,
+                              'totalCharge': totalCharge,
+                              'selectedSeats': selectedSeatsString,
+                            };
+                            await FirebaseFirestore.instance.collection('personalbooking').add(personalBookingData);
+                          }
+
                           showDialog(
                             context: context,
                             builder: (BuildContext context) {
@@ -171,30 +190,44 @@ class _bookings extends State<bookings> {
                             },
                           );
                         } else {
-                          // Booking with the same ID doesn't exist, so add a new booking
                           final bookingData = {
                             'movieId': id,
                             'selectedSeats': selectedSeatsString,
                           };
                           await FirebaseFirestore.instance.collection('bookings').add(bookingData);
+                          final personalBookingSnapshot = await FirebaseFirestore.instance
+                              .collection('personalbooking')
+                              .where('movieId', isEqualTo: id)
+                              .get();
 
-                          final personalbook = {
-                            'username': username!.email.toString(),
-                            'movieId': id,
-                            'date': date,
-                            'movieName':oriname,
-                            'timeof': timeof,
-                            'selectedSeats': selectedSeatsString,
-                          };
-                          await FirebaseFirestore.instance.collection('personalbooking').add(personalbook);
+                          if (personalBookingSnapshot.docs.isNotEmpty) {
+                            final existingPersonalBookingDoc = personalBookingSnapshot.docs.first;
+                            final existingPersonalBookingId = existingPersonalBookingDoc.id;
+                            final existingSeats = existingPersonalBookingDoc['selectedSeats'] as String;
+                            final List<dynamic> updatedSeatsList = jsonDecode(existingSeats);
+                            updatedSeatsList.addAll(selectedSeatIndices);
 
-                          // Notify the user that the booking was successful
+                            await FirebaseFirestore.instance.collection('personalbooking').doc(existingPersonalBookingId).update({'selectedSeats': jsonEncode(updatedSeatsList)});
+                          } else {
+                            final personalBookingData = {
+                              'username': username!.email.toString(),
+                              'movieId': id,
+                              'date': date,
+                              'movieName': oriname,
+                              'timeof': timeof,
+                              'cinemaName': cinemaname,
+                              'totalCharge': totalCharge,
+                              'selectedSeats': selectedSeatsString,
+                            };
+                            await FirebaseFirestore.instance.collection('personalbooking').add(personalBookingData);
+                          }
+
                           showDialog(
                             context: context,
                             builder: (BuildContext context) {
                               return AlertDialog(
                                 title: Text('Booking Successful'),
-                                content: Text('Your booking has been successfully added.'),
+                                content: Text('Your booking is successfully added and your Total is $totalCharge'),
                                 actions: <Widget>[
                                   TextButton(
                                     onPressed: () {
@@ -208,8 +241,10 @@ class _bookings extends State<bookings> {
                           );
                         }
                       },
-                      child: Text('Print Selected Seats'),
+                      child: Text('book 💲$totalCharge'),
                     ),
+
+
 
                     Expanded(
                       child: GridView.builder(
@@ -236,10 +271,10 @@ class _bookings extends State<bookings> {
                                   ),
                                 ],
                                 color: isReserved
-                                    ? Colors.red // Reserved seats are in red
+                                    ? Colors.red
                                     : isSelected
-                                    ? Colors.blue // Selected seats are in blue
-                                    : Colors.green, // Available seats are in green
+                                    ? Colors.blue
+                                    : Colors.green,
                               ),
                               child: Center(
                                 child: Text(
