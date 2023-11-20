@@ -159,8 +159,8 @@ class _admin extends State<admin> {
                       },
                       child: Text('Pick from Gallery'),
                       style: ElevatedButton.styleFrom(
-                        primary: Colors.blue, // Change the button color as needed
-                        onPrimary: Colors.white, // Change the text color as needed
+                        primary: Colors.blue,
+                        onPrimary: Colors.white,
                       ),
                     ),
                   ],
